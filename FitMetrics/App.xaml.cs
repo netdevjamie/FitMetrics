@@ -11,10 +11,12 @@ namespace FitMetrics
 
         public App()
         {
+            Console.WriteLine("can you hear me now?");
             InitializeComponent();
 
             DependencyService.Register<MockDataStore>();
             MainPage = new AppShell();
+            Console.Error.WriteLine("can you error now?");
         }
 
         protected override void OnStart()

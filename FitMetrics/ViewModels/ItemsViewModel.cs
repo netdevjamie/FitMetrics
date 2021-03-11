@@ -12,12 +12,27 @@ namespace FitMetrics.ViewModels
 {
     public class ItemsViewModel : BaseViewModel
     {
-        private Item _selectedItem;
+        Item _selectedItem;
+        string _error;
+
 
         public ObservableCollection<Item> Items { get; }
         public Command LoadItemsCommand { get; }
         public Command AddItemCommand { get; }
+        public Command LinkCommand { get; }
         public Command<Item> ItemTapped { get; }
+
+        public string Error
+        {
+            get
+            {
+                return _error;
+            }
+            set
+            {
+                this.SetProperty(ref _error, value);
+            }
+        }
 
         public ItemsViewModel()
         {
@@ -28,6 +43,8 @@ namespace FitMetrics.ViewModels
             ItemTapped = new Command<Item>(OnItemSelected);
 
             AddItemCommand = new Command(OnAddItem);
+
+            LinkCommand = new Command(OnClick);
         }
 
         async Task ExecuteLoadItemsCommand()
@@ -69,13 +86,28 @@ namespace FitMetrics.ViewModels
             }
         }
 
-        private async void OnAddItem(object obj)
+        async void OnAddItem(object obj)
         {
             await Shell.Current.GoToAsync(nameof(NewItemPage));
         }
 
+        async void OnClick(object obj)
+        {
+            Console.WriteLine("Le click");
+            try
+            {
+                await Geodude.NavigateTo();
+            }
+            catch (Exception ex)
+            {
+                FMetrics.BReusable.Logging.logEx(ex);
+                this.Error = ex.Message;
+            }
+        }
+
         async void OnItemSelected(Item item)
         {
+            Console.WriteLine("onitem selected firing");
             if (item == null)
                 return;
 
