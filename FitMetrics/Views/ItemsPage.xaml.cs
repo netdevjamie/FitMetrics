@@ -29,5 +29,11 @@ namespace FitMetrics.Views
             base.OnAppearing();
             _viewModel.OnAppearing();
         }
+
+        //private void Button_Clicked(object sender, EventArgs e)
+        //{
+        //    Console.WriteLine("clicked!");
+        //    _viewModel.LinkCommand.Execute(null);
+        //}
     }
 }
