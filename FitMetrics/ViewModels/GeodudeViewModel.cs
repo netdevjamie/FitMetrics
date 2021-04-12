@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 using Xamarin.Essentials;
+using System.ComponentModel;
 
 using FMetrics;
 using System.Threading.Tasks;
 
 namespace FitMetrics.ViewModels
 {
-    public class GeodudeViewModel : BaseViewModel
+    public class GeodudeViewModel : BaseViewModel, INotifyPropertyChanged
     {
-        public string Gps { get; set; }
+        public string Latitude { get; set; }
+        public string Longitude { get; set; }
+        public string Error { get; set; }
 
         public GeodudeViewModel()
         {
@@ -30,18 +33,23 @@ namespace FitMetrics.ViewModels
                 {
                     Console.Error.WriteLine("No geo, dude");
                 }
+                else
+                {
+                    Latitude = location.Latitude.ToString();
+                    Longitude = location.Longitude.ToString();
+                }
             }
             catch (FeatureNotSupportedException fnsEx)
             {
                 // Handle not supported on device exception
-                Gps = nameof(FeatureNotSupportedException).Before("Exception");
+                Error = nameof(FeatureNotSupportedException).Before("Exception");
                 // demonstrate a sample C# logging call
                 Console.Error.WriteLine($"{nameof(FeatureNotSupportedException)}:{fnsEx.Message}");
             }
             catch (FeatureNotEnabledException fneEx)
             {
                 // Handle not enabled on device exception
-                Gps = nameof(FeatureNotEnabledException).Before("Exception");
+                Error = nameof(FeatureNotEnabledException).Before("Exception");
                 // demonstrate calling the F# logger
                 FMetrics.BReusable.Logging.logEx(fneEx);
                 //Console.Error.WriteLine($"{nameof(FeatureNotEnabledException)}:{fneEx.Message}");
@@ -49,14 +57,14 @@ namespace FitMetrics.ViewModels
             catch (PermissionException pEx)
             {
                 // Handle permission exception
-                Gps = nameof(PermissionException).Before("Exception");
+                Error = nameof(PermissionException).Before("Exception");
                 FMetrics.BReusable.Logging.logEx(pEx);
 
             }
             catch (Exception ex)
             {
                 // Unable to get location
-                Gps = ex.Message;
+                Error = ex.Message;
                 FMetrics.BReusable.Logging.logEx(ex);
             }
         }
