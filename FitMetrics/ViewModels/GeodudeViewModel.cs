@@ -5,14 +5,23 @@ using Xamarin.Essentials;
 using System.ComponentModel;
 
 using FMetrics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FitMetrics.ViewModels
 {
-    public class GeodudeViewModel : BaseViewModel, INotifyPropertyChanged
+    public class GeodudeViewModel : BaseViewModel, INotifyPropertyChanged, IDisposable
     {
-        public string Latitude { get; set; }
-        public string Longitude { get; set; }
+        CancellationTokenSource _cts = new CancellationTokenSource();
+
+        string _latitude;
+        public string Latitude { get => _latitude; set { _latitude = value; this.OnPropertyChanged(nameof(Latitude)); } }
+
+        string _longitude;
+        private bool disposedValue;
+
+        public string Longitude { get => _longitude; set { _longitude = value; this.OnPropertyChanged(nameof(Longitude)); } }
+
         public string Error { get; set; }
 
         public GeodudeViewModel()
@@ -20,7 +29,35 @@ namespace FitMetrics.ViewModels
             Title = "Gps";
             Console.WriteLine("Creating a geo vm");
             // HACK: very questionable coding
+            //this.Init().Wait();
+
+            //_ = Poll(500);
+        }
+
+        public void Startup()
+        {
             this.Init().Wait();
+
+            _ = Poll(500);
+        }
+
+        async Task Poll(int sleep)
+        {
+            if(_cts.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await Task.Delay(sleep);
+
+            if (_cts.IsCancellationRequested)
+            {
+                return;
+            }
+
+            await this.Init();
+
+            _ = Poll(sleep);
         }
 
         async Task Init()
@@ -28,7 +65,8 @@ namespace FitMetrics.ViewModels
             Console.Error.WriteLine("geo, dude?");
             try
             {
-                var location = await Geolocation.GetLastKnownLocationAsync();
+
+                var location = await MainThread.InvokeOnMainThreadAsync(Geolocation.GetLastKnownLocationAsync);
                 if (location == null)
                 {
                     Console.Error.WriteLine("No geo, dude");
@@ -67,6 +105,36 @@ namespace FitMetrics.ViewModels
                 Error = ex.Message;
                 FMetrics.BReusable.Logging.logEx(ex);
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    _cts.Cancel();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~GeodudeViewModel()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
