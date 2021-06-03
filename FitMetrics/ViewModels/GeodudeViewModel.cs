@@ -12,38 +12,37 @@ namespace FitMetrics.ViewModels
 {
     public class GeodudeViewModel : BaseViewModel, INotifyPropertyChanged, IDisposable
     {
-        CancellationTokenSource _cts = new CancellationTokenSource();
+        readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         string _latitude;
-        public string Latitude { get => _latitude; set { _latitude = value; this.OnPropertyChanged(nameof(Latitude)); } }
-
         string _longitude;
+        string _error;
+
         private bool disposedValue;
+        public string Latitude { get => _latitude; set { _latitude = value; this.OnPropertyChanged(nameof(Latitude)); } }
 
         public string Longitude { get => _longitude; set { _longitude = value; this.OnPropertyChanged(nameof(Longitude)); } }
 
-        public string Error { get; set; }
+        public string Error { get => _error; set { _error = value; this.OnPropertyChanged(nameof(Error)); } }
 
         public GeodudeViewModel()
         {
             Title = "Gps";
             Console.WriteLine("Creating a geo vm");
-            // HACK: very questionable coding
-            //this.Init().Wait();
 
-            //_ = Poll(500);
         }
 
-        public void Startup()
+        public async Task Startup()
         {
-            this.Init().Wait();
+            var permResult = await MainThread.InvokeOnMainThreadAsync(Permissions.RequestAsync<Permissions.LocationWhenInUse>);
 
-            _ = Poll(500);
+            if (!(permResult == PermissionStatus.Granted)) return;
+            await this.GetLocation();
         }
 
-        async Task Poll(int sleep)
+        public async Task Poll(int sleep)
         {
-            if(_cts.IsCancellationRequested)
+            if (_cts.IsCancellationRequested)
             {
                 return;
             }
@@ -55,18 +54,18 @@ namespace FitMetrics.ViewModels
                 return;
             }
 
-            await this.Init();
+            await this.GetLocation();
 
             _ = Poll(sleep);
         }
 
-        async Task Init()
+        async Task GetLocation()
         {
-            Console.Error.WriteLine("geo, dude?");
+            Console.Error.WriteLine("geo, dude? " + DateTime.Now.ToLongTimeString());
             try
             {
 
-                var location = await MainThread.InvokeOnMainThreadAsync(Geolocation.GetLastKnownLocationAsync);
+                var location = await Geolocation.GetLocationAsync();
                 if (location == null)
                 {
                     Console.Error.WriteLine("No geo, dude");
@@ -97,7 +96,6 @@ namespace FitMetrics.ViewModels
                 // Handle permission exception
                 Error = nameof(PermissionException).Before("Exception");
                 FMetrics.BReusable.Logging.logEx(pEx);
-
             }
             catch (Exception ex)
             {

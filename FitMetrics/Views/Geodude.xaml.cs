@@ -15,36 +15,25 @@ namespace FitMetrics.Views
         public Geodude()
         {
             InitializeComponent();
-            InitializeVM();
         }
         public static async Task NavigateTo()
         {
             Console.Write("I'm trying to navigate here");
+            var vm = new GeodudeViewModel();
+            await vm.Startup();
             await Shell.Current.GoToAsync($"{nameof(Geodude)}");
+            Shell.Current.BindingContext = vm;
+            _ = vm.Poll(500);
         }
 
         public static void WaitAndExecute(Action a)
         {
-            var task = new Task((() => {
+            var task = new Task((() =>
+            {
                 Task.Delay(1000);
                 a();
             }));
 
-        }
-
-        public void InitializeVM()
-        {
-            WaitAndExecute(() =>
-            {
-                if (this.BindingContext is GeodudeViewModel g)
-                {
-                    g.Startup();
-                }
-                else
-                {
-                    Console.Error.WriteLine();
-                }
-            });
         }
     }
 
