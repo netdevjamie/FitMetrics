@@ -4,9 +4,6 @@
 
              xmlns:vm="clr-namespace:FitMetrics.ViewModels"
              x:Class="FitMetrics.Views.Geodude">
-    <ContentPage.BindingContext>
-        <vm:GeodudeViewModel />
-    </ContentPage.BindingContext>
     <ContentPage.Content>
         <StackLayout>
             <Label Text="Welcome to FitMetrics!"
